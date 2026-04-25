@@ -1,6 +1,10 @@
 // AI Assistant powered by Lovable AI Gateway. Grounds answers on the calling user's tenant data.
-import { corsHeaders } from "@supabase/supabase-js/cors";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
