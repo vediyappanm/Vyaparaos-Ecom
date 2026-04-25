@@ -9,7 +9,16 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
 import POS from "./pages/admin/POS";
-import ComingSoon from "./pages/admin/ComingSoon";
+import Orders from "./pages/admin/Orders";
+import Invoices from "./pages/admin/Invoices";
+import Inventory from "./pages/admin/Inventory";
+import Purchases from "./pages/admin/Purchases";
+import Parties from "./pages/admin/Parties";
+import Finance from "./pages/admin/Finance";
+import Staff from "./pages/admin/Staff";
+import Reports from "./pages/admin/Reports";
+import AI from "./pages/admin/AI";
+import SettingsPage from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -25,17 +34,17 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="pos" element={<POS />} />
             <Route path="products" element={<Products />} />
-            <Route path="orders" element={<ComingSoon title="Orders" description="Manage all orders, track status, share invoices" />} />
-            <Route path="inventory" element={<ComingSoon title="Inventory" description="Stock levels, movements, low-stock alerts" />} />
-            <Route path="parties" element={<ComingSoon title="Parties" description="Customers and vendors with full ledger" />} />
-            <Route path="finance" element={<ComingSoon title="Finance" description="Cash, bank, expenses, P&L" />} />
-            <Route path="staff" element={<ComingSoon title="Staff" description="Manage staff, roles, attendance, salaries" />} />
-            <Route path="invoices" element={<ComingSoon title="Invoices" description="All GST invoices, templates, e-invoice" />} />
-            <Route path="reports" element={<ComingSoon title="Reports" description="GST reports, P&L, stock, party ledgers" />} />
-            <Route path="ai" element={<ComingSoon title="AI Assistant" description="Ask anything about your business in any Indian language" />} />
-            <Route path="settings" element={<ComingSoon title="Settings" description="Store profile, GST, invoice templates, integrations" />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="purchases" element={<Purchases />} />
+            <Route path="parties" element={<Parties />} />
+            <Route path="finance" element={<Finance />} />
+            <Route path="staff" element={<Staff />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="ai" element={<AI />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
