@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, TrendingUp, Receipt, Wallet, Boxes, Loader2 } from "lucide-react";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useOrders } from "@/hooks/useOrders";
-import { useFinance } from "@/hooks/useFinance";
+import { useTransactions } from "@/hooks/useFinance";
 import { useProducts } from "@/hooks/useProducts";
 import { usePurchases } from "@/hooks/usePurchases";
 import { formatINR, formatCompactINR } from "@/lib/format";
@@ -29,8 +29,8 @@ export default function Reports() {
   const { data: dash } = useDashboard();
   const { data: orders = [] } = useOrders(1000);
   const { data: products = [] } = useProducts();
-  const { data: purchases = [] } = usePurchases(500);
-  const finance = useFinance(180);
+  const { data: purchases = [] } = usePurchases();
+  const { data: txns = [] } = useTransactions(500);
   const [tab, setTab] = useState("sales");
 
   // ---- Sales analytics ----
@@ -57,12 +57,12 @@ export default function Reports() {
       const p = products.find(pr => pr.id === it.product_id);
       return x + (p ? Number(p.cost_price) * Number(it.qty) : 0);
     }, 0), 0);
-    const expenses = (finance.transactions.data ?? []).filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0);
-    const otherIncome = (finance.transactions.data ?? []).filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0);
+    const expenses = (txns ?? []).filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0);
+    const otherIncome = (txns ?? []).filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0);
     const grossProfit = revenue - cogs;
     const netProfit = grossProfit + otherIncome - expenses;
     return { revenue, cogs, grossProfit, expenses, otherIncome, netProfit };
-  }, [orders, products, finance.transactions.data]);
+  }, [orders, products, txns]);
 
   // ---- GST: GSTR-1 like summary by HSN+rate ----
   const gstSummary = useMemo(() => {
