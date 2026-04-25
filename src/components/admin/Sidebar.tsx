@@ -28,6 +28,7 @@ const NAV: NavItem[] = [
   { to: "/admin/staff", label: "Staff", icon: UserCog, roles: ["owner", "manager"] },
   { to: "/admin/invoices", label: "Invoices", icon: FileText },
   { to: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner", "manager"] },
+  { to: "/admin/audit", label: "Activity Log", icon: FileText, roles: ["owner", "manager"] },
   { to: "/admin/ai", label: "AI Assistant", icon: Sparkles },
   { to: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];

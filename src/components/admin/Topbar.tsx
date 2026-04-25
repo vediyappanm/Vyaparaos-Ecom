@@ -1,4 +1,5 @@
-import { Bell, Search, ChevronDown, Crown, LogOut, Settings, Store, Check, Building2 } from "lucide-react";
+import { Search, ChevronDown, Crown, LogOut, Settings, Store, Check, Building2 } from "lucide-react";
+import { NotificationsBell } from "./NotificationsBell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -81,10 +82,7 @@ export const Topbar = () => {
           <div className="font-display font-bold text-sm text-primary truncate">{tenant?.name ?? "VyaparOS"}</div>
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
-          <Button variant="ghost" size="icon" className="relative hover:bg-white/40">
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent ring-2 ring-background" />
-          </Button>
+          <NotificationsBell />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 pl-2 border-l border-white/30 hover:opacity-90">
