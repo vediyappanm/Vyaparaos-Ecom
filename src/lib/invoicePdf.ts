@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
-import { STORE } from "@/data/mockData";
+import { STORE as DEFAULT_STORE } from "@/data/mockData";
 import { formatINR } from "./format";
 
 export type InvoiceItem = {
@@ -10,6 +10,18 @@ export type InvoiceItem = {
   unit: string;
   unitPrice: number; // pre-tax
   taxRate: number; // %
+};
+
+export type InvoiceStore = {
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  phone?: string;
+  email?: string;
+  gstin?: string;
+  upiId?: string;
 };
 
 export type InvoiceData = {
@@ -23,6 +35,7 @@ export type InvoiceData = {
   paymentMode: string;
   isInterstate?: boolean;
   notes?: string;
+  store?: InvoiceStore;
 };
 
 const PRIMARY: [number, number, number] = [30, 58, 95];
@@ -31,6 +44,7 @@ const MUTED: [number, number, number] = [110, 120, 140];
 const LIGHT: [number, number, number] = [240, 244, 250];
 
 export const generateInvoicePDF = async (data: InvoiceData) => {
+  const STORE = { ...DEFAULT_STORE, ...(data.store ?? {}) } as typeof DEFAULT_STORE;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = 210;
   let y = 0;
