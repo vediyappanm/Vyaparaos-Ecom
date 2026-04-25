@@ -93,12 +93,33 @@ export const useCreateOrder = () => {
       const { error: iErr } = await supabase.from("order_items").insert(items);
       if (iErr) throw iErr;
 
-      // Decrement stock
+      // Decrement stock + log stock movements
       for (const it of input.items) {
         if (!it.product_id) continue;
         const { data: p } = await supabase.from("products").select("stock_qty").eq("id", it.product_id).maybeSingle();
         if (p) {
           await supabase.from("products").update({ stock_qty: Math.max(0, Number(p.stock_qty) - it.qty) }).eq("id", it.product_id);
+        }
+        await supabase.from("stock_movements").insert({
+          tenant_id: tenant.id, product_id: it.product_id, product_name: it.product_name,
+          type: "sale", qty: -it.qty, reference: order_number, created_by: user.id,
+        });
+      }
+
+      // Record receipt transaction if paid
+      if (input.paid_amount > 0) {
+        const { data: acc } = await supabase.from("accounts").select("id, balance, type")
+          .eq("tenant_id", tenant.id).eq("is_active", true).order("created_at").limit(10);
+        const modeMap: Record<string, string> = { Cash: "cash", UPI: "upi", Card: "bank", Credit: "bank" };
+        const wantType = modeMap[input.payment_mode] ?? "cash";
+        const account = (acc ?? []).find((a: any) => a.type === wantType) ?? acc?.[0];
+        if (account) {
+          await supabase.from("transactions").insert({
+            tenant_id: tenant.id, account_id: account.id, type: "receipt",
+            party_name: input.party_name, amount: input.paid_amount, mode: input.payment_mode,
+            notes: `Order ${order_number}`, reference: order_number, created_by: user.id,
+          });
+          await supabase.from("accounts").update({ balance: Number(account.balance) + input.paid_amount }).eq("id", account.id);
         }
       }
 
@@ -107,6 +128,10 @@ export const useCreateOrder = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["stock-movements"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
