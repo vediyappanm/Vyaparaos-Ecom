@@ -20,7 +20,11 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (session) nav("/admin", { replace: true });
+    if (session) {
+      const dest = sessionStorage.getItem("post_auth_redirect");
+      if (dest) { sessionStorage.removeItem("post_auth_redirect"); nav(dest, { replace: true }); }
+      else nav("/admin", { replace: true });
+    }
   }, [session, nav]);
 
   const handleSubmit = async (e: React.FormEvent) => {

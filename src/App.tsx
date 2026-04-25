@@ -10,6 +10,8 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import Join from "./pages/Join";
+import Storefront from "./pages/Storefront";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
@@ -39,6 +41,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/join/:code" element={<Join />} />
+              <Route path="/shop/:slug" element={<Storefront />} />
               <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<Dashboard />} />
                 <Route path="pos" element={<POS />} />
