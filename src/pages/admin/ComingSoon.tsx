@@ -1,18 +1,20 @@
 import { Card } from "@/components/ui/card";
-import { Construction } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/admin/PageHeader";
 
 export const ComingSoon = ({ title, description }: { title: string; description?: string }) => (
   <div className="px-4 lg:px-6 py-5 animate-fade-in">
-    <h1 className="font-display font-bold text-2xl lg:text-3xl">{title}</h1>
-    <p className="text-sm text-muted-foreground mt-1">{description}</p>
-    <Card className="mt-6 p-12 text-center bg-gradient-to-br from-muted/40 to-card">
-      <div className="w-16 h-16 mx-auto rounded-2xl gradient-accent flex items-center justify-center shadow-glow">
-        <Construction className="w-8 h-8 text-accent-foreground" />
+    <PageHeader title={title} description={description} eyebrow="Module" />
+    <Card className="mt-6 p-12 text-center royal-orb-bg">
+      <div className="relative">
+        <div className="w-16 h-16 mx-auto rounded-2xl gradient-accent flex items-center justify-center shadow-glow ring-1 ring-white/40">
+          <Sparkles className="w-8 h-8 text-accent-foreground" />
+        </div>
+        <h2 className="mt-4 font-display font-bold text-xl">Crafting royal experience…</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+          This module ships in a future phase. The current preview gives you working Dashboard, POS, Products, Orders, Inventory, Purchases, Parties, Finance, Staff, Invoices, Reports, AI &amp; Settings.
+        </p>
       </div>
-      <h2 className="mt-4 font-display font-bold text-xl">Coming in next phase</h2>
-      <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-        This module is part of Phase 2 of VyaparOS. The Phase 1 MVP focuses on Dashboard, Products, POS sales, and GST invoice generation.
-      </p>
     </Card>
   </div>
 );
