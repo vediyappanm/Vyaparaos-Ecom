@@ -197,9 +197,11 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
 
   const drawTotalRow = (label: string, value: string, opts: { bold?: boolean; accent?: boolean } = {}) => {
     if (opts.bold) doc.setFont("helvetica", "bold"); else doc.setFont("helvetica", "normal");
-    doc.setTextColor(...(opts.accent ? PRIMARY : MUTED));
+    const labelColor: [number, number, number] = opts.accent ? PRIMARY : MUTED;
+    doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
     doc.text(label, labelX, y + 4);
-    doc.setTextColor(...(opts.accent ? PRIMARY : [40, 50, 70]));
+    const valColor: [number, number, number] = opts.accent ? PRIMARY : [40, 50, 70];
+    doc.setTextColor(valColor[0], valColor[1], valColor[2]);
     doc.text(value, valX, y + 4, { align: "right" });
     y += 5.5;
   };
