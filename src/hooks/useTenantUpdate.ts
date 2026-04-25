@@ -7,7 +7,7 @@ export const useUpdateTenant = () => {
   return useMutation({
     mutationFn: async (patch: Record<string, any>) => {
       if (!tenant) throw new Error("No tenant");
-      const { error } = await supabase.from("tenants").update(patch).eq("id", tenant.id);
+      const { error } = await supabase.from("tenants").update(patch as any).eq("id", tenant.id);
       if (error) throw error;
       await refresh();
     },
