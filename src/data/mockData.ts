@@ -239,3 +239,9 @@ export const sampleLedger = (partyName: string) => [
   { date: "24 Apr 2026", particulars: "Sale SRM-1035", debit: 3500, credit: 0, balance: 6000 },
   { date: "25 Apr 2026", particulars: "Receipt — Cash", debit: 0, credit: 1000, balance: 5000 },
 ];
+
+// Backward-compat alias
+export const RECENT_ORDERS = ORDERS.slice(0, 6).map(o => ({
+  id: o.id, customer: o.customer, phone: o.phone, items: o.items,
+  total: o.total, status: o.status, payment: o.payment, time: o.time,
+}));
