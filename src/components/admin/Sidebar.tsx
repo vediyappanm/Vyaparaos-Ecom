@@ -5,28 +5,38 @@ import {
   ScanLine, Boxes, ChevronRight, ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STORE } from "@/data/mockData";
+import { useTenant, type AppRole } from "@/contexts/TenantContext";
 
-const NAV = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: any;
+  end?: boolean;
+  highlight?: boolean;
+  roles?: AppRole[]; // when omitted, all members see it
+};
+
+const NAV: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/pos", label: "New Sale (POS)", icon: ScanLine, highlight: true },
   { to: "/admin/orders", label: "Orders", icon: ShoppingCart },
-  { to: "/admin/products", label: "Products", icon: Package },
-  { to: "/admin/inventory", label: "Inventory", icon: Boxes },
-  { to: "/admin/purchases", label: "Purchases", icon: ShoppingBag },
+  { to: "/admin/products", label: "Products", icon: Package, roles: ["owner", "manager"] },
+  { to: "/admin/inventory", label: "Inventory", icon: Boxes, roles: ["owner", "manager"] },
+  { to: "/admin/purchases", label: "Purchases", icon: ShoppingBag, roles: ["owner", "manager"] },
   { to: "/admin/parties", label: "Parties", icon: Users },
-  { to: "/admin/finance", label: "Finance", icon: Wallet },
-  { to: "/admin/staff", label: "Staff", icon: UserCog },
+  { to: "/admin/finance", label: "Finance", icon: Wallet, roles: ["owner", "manager"] },
+  { to: "/admin/staff", label: "Staff", icon: UserCog, roles: ["owner", "manager"] },
   { to: "/admin/invoices", label: "Invoices", icon: FileText },
-  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
+  { to: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner", "manager"] },
   { to: "/admin/ai", label: "AI Assistant", icon: Sparkles },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
+  { to: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];
 
 export const Sidebar = () => {
+  const { tenant, role } = useTenant();
+  const items = NAV.filter((n) => !n.roles || (role && n.roles.includes(role)));
   return (
     <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 z-30">
-      {/* Royal gradient backdrop */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[hsl(265_60%_14%)] via-[hsl(280_55%_16%)] to-[hsl(265_70%_10%)]" />
       <div className="absolute inset-0 -z-10 opacity-60 bg-[radial-gradient(ellipse_at_top,hsl(43_90%_55%/0.18),transparent_60%),radial-gradient(ellipse_at_bottom,hsl(310_60%_40%/0.25),transparent_60%)]" />
       <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
@@ -46,14 +56,17 @@ export const Sidebar = () => {
 
       <div className="px-3 py-3 border-b border-white/10">
         <div className="px-3 py-2.5 rounded-xl glass-dark">
-          <div className="text-[10px] uppercase tracking-wider text-white/60">Active Store</div>
-          <div className="font-display font-semibold text-sm text-white truncate">{STORE.name}</div>
-          <div className="text-[10px] text-white/50 truncate font-mono">GSTIN {STORE.gstin}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[10px] uppercase tracking-wider text-white/60">Active Workspace</div>
+            {role && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/20 text-accent-glow font-semibold">{role}</span>}
+          </div>
+          <div className="font-display font-semibold text-sm text-white truncate mt-0.5">{tenant?.name ?? "—"}</div>
+          {tenant?.gstin && <div className="text-[10px] text-white/50 truncate font-mono">GSTIN {tenant.gstin}</div>}
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-        {NAV.map(({ to, label, icon: Icon, end, highlight }) => (
+        {items.map(({ to, label, icon: Icon, end, highlight }) => (
           <NavLink
             key={to}
             to={to}
@@ -85,7 +98,7 @@ export const Sidebar = () => {
 
       <div className="px-3 py-3 border-t border-white/10">
         <div className="px-2 py-2 text-[10px] text-white/40 font-mono">
-          v1.0 · Royal Edition
+          v1.1 · Royal Edition · Realtime
         </div>
       </div>
     </aside>
