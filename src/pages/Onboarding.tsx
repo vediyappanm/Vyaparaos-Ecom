@@ -63,6 +63,13 @@ export default function Onboarding() {
         .insert({ user_id: session.user.id, tenant_id: tenantRow.id, role: "owner" });
       if (rErr) throw rErr;
 
+      // Seed default cash/bank/UPI accounts
+      await supabase.from("accounts").insert([
+        { tenant_id: tenantRow.id, name: "Cash in Hand", type: "cash", balance: 0 },
+        { tenant_id: tenantRow.id, name: "Bank Account", type: "bank", balance: 0 },
+        { tenant_id: tenantRow.id, name: "UPI Wallet", type: "upi", balance: 0 },
+      ]);
+
       toast.success(`Welcome to ${tenantRow.name}!`);
       await refresh();
       nav("/admin", { replace: true });
