@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { getSession, clearSession, type User as AuthUser } from "@/lib/auth";
 
 type AuthCtx = {
-  session: Session | null;
-  user: User | null;
+  session: { user: AuthUser; token: string } | null;
+  user: AuthUser | null;
   loading: boolean;
   signOut: () => Promise<void>;
 };
@@ -12,25 +11,20 @@ type AuthCtx = {
 const Ctx = createContext<AuthCtx>({ session: null, user: null, loading: true, signOut: async () => {} });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthCtx['session']>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
-      setSession(s);
+    // Check existing session on mount
+    getSession().then((currentSession) => {
+      setSession(currentSession);
       setLoading(false);
     });
-    // THEN check existing session
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    clearSession();
+    setSession(null);
   };
 
   return (

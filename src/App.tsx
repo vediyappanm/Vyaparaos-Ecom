@@ -25,6 +25,7 @@ import Finance from "./pages/admin/Finance";
 import Staff from "./pages/admin/Staff";
 import Reports from "./pages/admin/Reports";
 import AI from "./pages/admin/AI";
+import Audit from "./pages/admin/Audit";
 import SettingsPage from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="finance" element={<Finance />} />
                 <Route path="staff" element={<Staff />} />
                 <Route path="reports" element={<Reports />} />
+                <Route path="audit" element={<Audit />} />
                 <Route path="ai" element={<AI />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>

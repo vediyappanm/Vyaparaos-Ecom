@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
-import { useUpsertProduct, type DbProduct } from "@/hooks/useProducts";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Sparkles } from "lucide-react";
+import { useProducts, useUpsertProduct, type DbProduct } from "@/hooks/useProducts";
 import { toast } from "sonner";
+import { analyzeBarcode, normalizeBarcode, recommendSmartCodes } from "@/lib/barcodeIntelligence";
 
 const empty = {
   name: "", category: "", sku: "", barcode: "", hsn_code: "", unit: "piece",
@@ -18,6 +20,7 @@ export const ProductFormDialog = ({
   open, onOpenChange, product,
 }: { open: boolean; onOpenChange: (b: boolean) => void; product?: DbProduct | null }) => {
   const upsert = useUpsertProduct();
+  const { data: allProducts = [] } = useProducts();
   const [form, setForm] = useState<any>(empty);
 
   useEffect(() => {
@@ -25,6 +28,14 @@ export const ProductFormDialog = ({
   }, [open, product]);
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  const barcodeAnalysis = analyzeBarcode(String(form.barcode || ""));
+
+  const smartFill = () => {
+    const smart = recommendSmartCodes(form, allProducts.filter((p) => p.id !== product?.id));
+    set("sku", form.sku || smart.sku);
+    set("barcode", smart.barcode);
+    toast.success("AI generated SKU and barcode");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,11 +87,23 @@ export const ProductFormDialog = ({
             </div>
             <div>
               <Label>SKU</Label>
-              <Input value={form.sku} onChange={e => set("sku", e.target.value)} />
+              <Input value={form.sku} onChange={e => set("sku", e.target.value.toUpperCase())} />
             </div>
             <div>
               <Label>Barcode</Label>
-              <Input value={form.barcode} onChange={e => set("barcode", e.target.value)} />
+              <Input value={form.barcode} onChange={e => set("barcode", normalizeBarcode(e.target.value))} />
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <Badge variant={barcodeAnalysis.valid ? "default" : "destructive"} className="text-[10px]">
+                  {barcodeAnalysis.valid ? barcodeAnalysis.format : "Invalid"}
+                </Badge>
+                <Button type="button" variant="ghost" className="h-6 px-2 text-[11px]" onClick={smartFill}>
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  AI Fill
+                </Button>
+              </div>
+              {!barcodeAnalysis.valid && form.barcode && (
+                <p className="text-[11px] text-destructive mt-1">{barcodeAnalysis.warnings[0] || "Barcode is not valid."}</p>
+              )}
             </div>
             <div>
               <Label>HSN Code</Label>

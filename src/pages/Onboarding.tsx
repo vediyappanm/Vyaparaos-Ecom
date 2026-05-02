@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Crown, Loader2, Store } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { getTenantBySlug, createTenant } from "@/lib/queries";
+import { api } from "@/lib/db";
 import { toast } from "sonner";
 
 const slugify = (s: string) =>
@@ -15,7 +16,7 @@ const slugify = (s: string) =>
 
 export default function Onboarding() {
   const nav = useNavigate();
-  const { session, loading: aLoad } = useAuth();
+  const { session, loading: aLoad, signOut } = useAuth();
   const { tenant, refresh, loading: tLoad } = useTenant();
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
@@ -40,35 +41,28 @@ export default function Onboarding() {
       // Slug uniqueness — append a short id if needed
       let baseSlug = slugify(form.name) || "store";
       let slug = baseSlug;
-      const { data: existing } = await supabase.from("tenants").select("id").eq("slug", slug).maybeSingle();
-      if (existing) slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+      try {
+        const existing = await getTenantBySlug(slug);
+        if (existing) slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+      } catch (error) {
+        // Tenant doesn't exist, which is what we want
+        // Continue with the original slug
+      }
 
-      const { data: tenantRow, error: tErr } = await supabase
-        .from("tenants")
-        .insert({
-          name: form.name,
-          slug,
-          gstin: form.gstin || null,
-          phone: form.phone || null,
-          city: form.city || null,
-          state: form.state || null,
-          pincode: form.pincode || null,
-        })
-        .select()
-        .single();
-      if (tErr) throw tErr;
+      const tenantRow = await createTenant({
+        name: form.name,
+        slug,
+        gstin: form.gstin,
+        phone: form.phone,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+      });
 
-      const { error: rErr } = await supabase
-        .from("user_roles")
-        .insert({ user_id: session.user.id, tenant_id: tenantRow.id, role: "owner" });
-      if (rErr) throw rErr;
-
-      // Seed default cash/bank/UPI accounts
-      await supabase.from("accounts").insert([
-        { tenant_id: tenantRow.id, name: "Cash in Hand", type: "cash", balance: 0 },
-        { tenant_id: tenantRow.id, name: "Bank Account", type: "bank", balance: 0 },
-        { tenant_id: tenantRow.id, name: "UPI Wallet", type: "upi", balance: 0 },
-      ]);
+      // Seed default cash/bank/UPI accounts using new API
+      await api.createAccount(tenantRow.id, { name: 'Cash in Hand', type: 'cash', balance: 0 });
+      await api.createAccount(tenantRow.id, { name: 'Bank Account', type: 'bank', balance: 0 });
+      await api.createAccount(tenantRow.id, { name: 'UPI Wallet', type: 'upi', balance: 0 });
 
       toast.success(`Welcome to ${tenantRow.name}!`);
       await refresh();

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/db";
 
 export type DbAccount = {
   id: string; tenant_id: string; name: string; type: string; balance: number;
@@ -14,9 +14,7 @@ export const useAccounts = () => {
     queryKey: ["accounts", tenant?.id],
     enabled: !!tenant,
     queryFn: async () => {
-      const { data, error } = await supabase.from("accounts").select("*").eq("tenant_id", tenant!.id).order("created_at");
-      if (error) throw error;
-      return (data ?? []) as DbAccount[];
+      return await api.getAccounts(tenant!.id) as DbAccount[];
     },
   });
 };
@@ -29,11 +27,9 @@ export const useUpsertAccount = () => {
       if (!tenant) throw new Error("No tenant");
       const payload = { ...a, tenant_id: tenant.id };
       if (a.id) {
-        const { data, error } = await supabase.from("accounts").update(payload).eq("id", a.id).select().single();
-        if (error) throw error; return data;
+        return await api.updateAccount(tenant.id, a.id, payload);
       }
-      const { data, error } = await supabase.from("accounts").insert(payload as any).select().single();
-      if (error) throw error; return data;
+      return await api.createAccount(tenant.id, payload);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),
   });
@@ -45,10 +41,8 @@ export const useTransactions = (limit = 100) => {
     queryKey: ["transactions", tenant?.id, limit],
     enabled: !!tenant,
     queryFn: async () => {
-      const { data, error } = await supabase.from("transactions").select("*, accounts(name, type)")
-        .eq("tenant_id", tenant!.id).order("txn_date", { ascending: false }).order("created_at", { ascending: false }).limit(limit);
-      if (error) throw error;
-      return data ?? [];
+      // Transactions endpoint not implemented yet, return empty array
+      return [];
     },
   });
 };
@@ -65,18 +59,8 @@ export const useCreateTransaction = () => {
       reference?: string; txn_date?: string;
     }) => {
       if (!tenant || !user) throw new Error("Not ready");
-      const { error } = await supabase.from("transactions").insert({
-        tenant_id: tenant.id, created_by: user.id, ...t,
-      });
-      if (error) throw error;
-      // Adjust account balance
-      if (t.account_id) {
-        const { data: a } = await supabase.from("accounts").select("balance").eq("id", t.account_id).maybeSingle();
-        if (a) {
-          const sign = (t.type === "receipt" || t.type === "income") ? 1 : -1;
-          await supabase.from("accounts").update({ balance: Number(a.balance) + sign * t.amount }).eq("id", t.account_id);
-        }
-      }
+      // Transactions endpoint not implemented yet
+      throw new Error('Transaction creation not implemented yet - needs transaction endpoint');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["transactions"] });

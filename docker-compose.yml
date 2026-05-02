@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    container_name: bazaar-mitr-db
+    environment:
+      POSTGRES_DB: bazaar_mitr
+      POSTGRES_USER: bazaar_user
+      POSTGRES_PASSWORD: bazaar_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

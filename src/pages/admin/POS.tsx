@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useProducts, type DbProduct } from "@/hooks/useProducts";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { useTenant } from "@/contexts/TenantContext";
+import { BarcodeScannerDialog } from "@/components/admin/BarcodeScannerDialog";
 
 type CartItem = DbProduct & { qty: number };
 type PaymentMode = "Cash" | "UPI" | "Card" | "Credit";
@@ -39,6 +40,7 @@ export default function POS() {
   const [discount, setDiscount] = useState(0);
   const [showCart, setShowCart] = useState(false);
   const [lastInvoice, setLastInvoice] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -186,6 +188,11 @@ export default function POS() {
 
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
 
+  const onScanDetected = (code: string) => {
+    setQuery(code);
+    toast.success(`Barcode scanned: ${code}`);
+  };
+
   return (
     <div className="h-[calc(100vh-3.5rem)] flex flex-col lg:flex-row overflow-hidden bg-muted/30">
       <div className="flex-1 flex flex-col min-w-0 lg:border-r border-border">
@@ -195,7 +202,7 @@ export default function POS() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search product / scan barcode..." className="pl-9 h-11 text-base" autoFocus />
             </div>
-            <Button size="lg" variant="outline" className="px-3"><ScanLine className="w-5 h-5" /></Button>
+            <Button size="lg" variant="outline" className="px-3" onClick={() => setScannerOpen(true)}><ScanLine className="w-5 h-5" /></Button>
           </div>
           {categories.length > 0 && (
             <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -357,6 +364,8 @@ export default function POS() {
           {cartCount > 0 ? <span>{cartCount} · {formatINR(calc.total, { decimals: false })}</span> : "Cart"}
         </button>
       )}
+      
+      <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onDetected={onScanDetected} />
     </div>
   );
 }

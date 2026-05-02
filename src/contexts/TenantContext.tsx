@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
+import { getUserRoles } from "@/lib/queries";
+import { api } from "@/lib/db";
 
 export type Tenant = {
   id: string;
@@ -50,29 +51,39 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const loadTenant = useCallback(async (tenantId: string, all: Membership[]) => {
-    const { data: t } = await supabase.from("tenants").select("*").eq("id", tenantId).maybeSingle();
-    setTenant((t as Tenant) ?? null);
-    const m = all.find((x) => x.tenant_id === tenantId);
-    setRole((m?.role as AppRole) ?? null);
-    if (t) localStorage.setItem(ACTIVE_KEY, tenantId);
+    try {
+      const t = await api.getTenantById(tenantId);
+      setTenant(t as Tenant ?? null);
+      const m = all.find((x) => x.tenant_id === tenantId);
+      setRole((m?.role as AppRole) ?? null);
+      if (t) localStorage.setItem(ACTIVE_KEY, tenantId);
+    } catch (error) {
+      console.error('Failed to load tenant:', error);
+      setTenant(null);
+      setRole(null);
+    }
   }, []);
 
   const load = useCallback(async () => {
     if (!user) { setTenant(null); setRole(null); setMemberships([]); setLoading(false); return; }
     setLoading(true);
-    const { data: roleRows } = await supabase
-      .from("user_roles")
-      .select("role, tenant_id, tenants(name)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
-    const all: Membership[] = (roleRows ?? []).map((r: any) => ({
-      tenant_id: r.tenant_id, role: r.role, tenant_name: r.tenants?.name ?? "—",
-    }));
-    setMemberships(all);
-    if (all.length === 0) { setTenant(null); setRole(null); setLoading(false); return; }
-    const stored = localStorage.getItem(ACTIVE_KEY);
-    const activeId = all.find((m) => m.tenant_id === stored)?.tenant_id ?? all[0].tenant_id;
-    await loadTenant(activeId, all);
+    try {
+      const roleRows = await getUserRoles(user.id);
+      const all: Membership[] = (roleRows ?? []).map((r: any) => ({
+        tenant_id: r.tenant_id, role: r.role, tenant_name: r.tenant_name ?? "—",
+      }));
+      setMemberships(all);
+      if (all.length === 0) { setTenant(null); setRole(null); setLoading(false); return; }
+      const stored = localStorage.getItem(ACTIVE_KEY);
+      const activeId = all.find((m) => m.tenant_id === stored)?.tenant_id ?? all[0].tenant_id;
+      await loadTenant(activeId, all);
+    } catch (error) {
+      // Handle case where user has no tenant (new user)
+      console.log('User has no tenant yet:', error);
+      setTenant(null);
+      setRole(null);
+      setMemberships([]);
+    }
     setLoading(false);
   }, [user, loadTenant]);
 

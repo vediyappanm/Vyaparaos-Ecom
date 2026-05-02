@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Crown, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signUp, signIn, setSession } from "@/lib/auth";
 import { toast } from "sonner";
 
 export default function Auth() {
@@ -32,21 +32,16 @@ export default function Auth() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
-            data: { full_name: fullName },
-          },
-        });
-        if (error) throw error;
+        const { user, token } = await signUp(email, password, fullName);
+        setSession(user, token);
         toast.success("Account created — signing you in…");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { user, token } = await signIn(email, password);
+        setSession(user, token);
         toast.success("Welcome back!");
       }
+      // Force reload to update auth context
+      window.location.reload();
     } catch (err: any) {
       toast.error(err.message ?? "Authentication failed");
     } finally {
@@ -55,12 +50,7 @@ export default function Auth() {
   };
 
   const handleGoogle = async () => {
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/admin` },
-    });
-    if (error) { toast.error(error.message); setBusy(false); }
+    toast.error("Google sign-in not available with local database");
   };
 
   return (

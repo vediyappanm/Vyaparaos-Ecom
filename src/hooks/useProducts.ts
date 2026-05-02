@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/queries-extended";
 
 export type DbProduct = {
   id: string;
@@ -28,13 +28,7 @@ export const useProducts = () => {
     queryKey: ["products", tenant?.id],
     enabled: !!tenant,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("tenant_id", tenant!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as DbProduct[];
+      return await getProducts(tenant!.id) as DbProduct[];
     },
   });
 };
@@ -47,13 +41,9 @@ export const useUpsertProduct = () => {
       if (!tenant) throw new Error("No tenant");
       const payload = { ...p, tenant_id: tenant.id };
       if (p.id) {
-        const { data, error } = await supabase.from("products").update(payload).eq("id", p.id).select().single();
-        if (error) throw error;
-        return data;
+        return await updateProduct(p.id, payload);
       }
-      const { data, error } = await supabase.from("products").insert(payload as any).select().single();
-      if (error) throw error;
-      return data;
+      return await createProduct(tenant.id, payload);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["products"] }),
   });
@@ -61,10 +51,11 @@ export const useUpsertProduct = () => {
 
 export const useDeleteProduct = () => {
   const qc = useQueryClient();
+  const { tenant } = useTenant();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) throw error;
+      if (!tenant) throw new Error("No tenant");
+      await deleteProduct(id, tenant.id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["products"] }),
   });
